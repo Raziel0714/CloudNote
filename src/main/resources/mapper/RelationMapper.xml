@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>  
+<!DOCTYPE mapper PUBLIC "-//ibatis.apache.org//DTD Mapper 3.0//EN"      
+ "http://ibatis.apache.org/dtd/ibatis-3-mapper.dtd">
+<mapper namespace="cn.tedu.cloudnote.dao.RelationDao">
+	<!--两条SQL语句实现  -->
+	<select id="findUserAndBooks"
+			  parameterType="String"
+			  resultMap="userMap1">
+		select 
+			cn_user_id as id,
+			cn_user_name as name,
+			cn_user_password as password,
+			cn_user_token as token,
+			cn_user_nick as nick
+		from cn_user
+		where cn_user_id=#{userId}
+	</select>
+	<resultMap id="userMap1" 
+				  type="cn.tedu.cloudnote.entity.User">
+	<!-- 按名称设置对应加载关系 ,同名加载可省略-->
+	<id property="id" column="id"/>
+	<result property="name" column="name"/>
+	<!-- 定义关联属性 -->
+	<collection property="books"
+					javaType="java.util.List"
+					ofType="cn.tedu.cloudnote.entity.Book"
+					select="findBooks"
+					column="id">
+	</collection>
+	</resultMap>
+	<select id="findBooks" parameterType="String"
+		     resultType="cn.tedu.cloudnote.entity.Book">
+			select 
+			  		cn_notebook_id as id,
+			  		cn_user_id as userId,
+			  		cn_notebook_name as name,
+			  		cn_notebook_type_id as typeId,
+			  		cn_notebook_desc as "desc",
+			  		cn_notebook_createtime as createTime
+			from
+			  		cn_notebook
+			where cn_user_id=#{userId}
+	</select>
+	
+	<!-- 一条SQL语句实现多个对象关联加载 -->
+	<select id="findUserAndBooks1"
+	        parameterType="String"
+	        resultMap="userMap2">
+		select * 
+		from cn_user u join cn_notebook b 
+		on (u.cn_user_id=b.cn_user_id)
+   	where u.cn_user_id=#{userId}
+	</select>
+	<resultMap id="userMap2" 
+				  type="cn.tedu.cloudnote.entity.User">
+		<!-- 定义cn_user映射,不能省略 -->
+		<id property="id" column="cn_user_id" />
+		<result property="name" column="cn_user_name" />
+		<result property="password" column="cn_user_password" />
+		<result property="token" column="cn_user_token" />
+		<result property="nick" column="cn_user_nick" />
+		<!-- 定义关联表cn_notebook的映射 -->
+		<collection property="books" 
+					   javaType="java.util.List"
+					   ofType="cn.tedu.cloudnote.entity.Book">
+			<id property="id" column="cn_notebook_id" />
+			<result property="userId" column="cn_user_id" />
+			<result property="typeId" column="cn_notebook_type_id" />
+			<result property="name" column="cn_notebook_name" />
+			<result property="desc" column="cn_notebook_desc" />
+			<result property="createTime" column="cn_notebook_createtime" />	
+		</collection>
+	</resultMap>
+	
+	<!-- 一个SQL语句查询Book -->
+	<select id="findBookAndUser" resultMap="bookMap1">
+		select *
+		from cn_notebook b 
+		join cn_user u
+		on(b.cn_user_id=u.cn_user_id)
+	</select>
+	<resultMap id="bookMap1" 
+				  type="cn.tedu.cloudnote.entity.Book" >
+		<!-- 定义cn_notebook映射关系 -->
+		<id property="id" column="cn_notebook_id" />
+		<result property="userId" column="cn_user_id" />
+		<result property="typeId" column="cn_notebook_type_id" />
+		<result property="name" column="cn_notebook_name" />
+		<result property="desc" column="cn_notebook_desc" />
+		<result property="createTime" column="cn_notebook_createtime" />
+		<!-- 定义cn_user映射关系 -->
+		<association property="user"
+						 javaType="cn.tedu.cloudnote.entity.User">
+			<id property="id" column="cn_user_id"/>
+			<result property="name" column="cn_user_name"/>
+			<result property="password" column="cn_user_password"/>
+			<result property="token" column="cn_user_token"/>
+			<result property="nick" column="cn_user_nick"/>
+		</association>
+		
+	</resultMap>
+	<!-- 两个SQL语句实现单个对象关联 -->
+	<select id="findBookAndUser1" resultMap="bookMap2">
+		select 
+			  		cn_notebook_id as id,
+			  		cn_user_id as userId,
+			  		cn_notebook_name as name,
+			  		cn_notebook_type_id as typeId,
+			  		cn_notebook_desc as "desc",
+			  		cn_notebook_createtime as createTime
+		from
+			  		cn_notebook
+	</select>
+	<resultMap id="bookMap2"
+			type="cn.tedu.cloudnote.entity.Book">
+			<!-- Book属性映射定义,可省略 -->
+			<association property="user"
+							 javaType="cn.tedu.cloudnote.entity.User"
+							 select="findUser"
+							 column="userId">
+			</association>
+	</resultMap>
+	<select id="findUser" parameterType="String"
+			  resultType="cn.tedu.cloudnote.entity.User">
+		select 
+			cn_user_id as id,
+			cn_user_name as name,
+			cn_user_password as password,
+			cn_user_token as token,
+			cn_user_nick as nick
+		from cn_user
+		where cn_user_id=#{userId}
+	</select>
+</mapper>
+
+
+
+
+
+
+
+
+
+
+
+
